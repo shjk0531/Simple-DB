@@ -1,11 +1,16 @@
 package com.sh.domain.simpleDb.db.entity;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Objects;
+import com.sh.domain.simpleDb.sql.entity.Sql;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
+import java.sql.*;
+import java.util.*;
+
+@Setter
+@Getter
+@SuperBuilder
 public class SimpleDb {
     private final String host;
     private final String user;
@@ -13,6 +18,7 @@ public class SimpleDb {
     private final String dbName;
     private boolean devMode = false;
     private Connection conn;
+    private Sql sql;
 
     public SimpleDb(String host, String user, String password, String dbName) {
         this.host = host;
@@ -26,57 +32,62 @@ public class SimpleDb {
             e.printStackTrace();
         }
 
-        try {
-            conn = DriverManager.getConnection("jdbc:mysql://"+ host + ":3306/" + dbName, user, password);
+        conn = Connection();
+    }
+
+    private Connection Connection() {
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://"+ host + ":3306/" + dbName, user, password)) {
+            System.out.println("DB Connection Success");
+            return connection;
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
     }
 
-    public void setDevMode(boolean devMode) {
-        this.devMode = devMode;
+    private List<Map<String, Object>> executeQuery(String query) {
+        if (!devMode) return null;
+        if (conn == null) return null;
+        if (query == null) return null;
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(query);
+        ResultSet resultSet = statement.executeQuery()) {
+
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            while (resultSet.next()) {
+                Map<String, Object> row = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    row.put(metaData.getColumnName(i), resultSet.getObject(i));
+                }
+                results.add(row);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 
-    public void run(String Sql) {
-        if (!devMode) return;
-        if (conn == null) return;
-        if (Sql == null) return;
-
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        try  {
-            Objects.requireNonNull(stmt).execute(Sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void run(String query) {
+        executeQuery(query);
     }
 
     public void run(Object... Sqls) {
-        if (!devMode) return;
-        if (conn == null) return;
-        if (Sqls == null) return;
-
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        String Sql = (String) Sqls[0];
+        sql.setSql((String) Sqls[0]);
         for (int i = 1; i < Sqls.length; i++) {
-            Sql.replaceFirst("\\?", Objects.requireNonNull(Sqls[i]).toString());
+           sql.replaceQuestion(Sqls[i].toString());
         }
 
-        try {
-            Objects.requireNonNull(stmt).execute(Sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        executeQuery(sql.getSql());
+    }
+
+    public Sql genSql() {
+        sql = Sql.builder().build();
+        return sql;
     }
 }
