@@ -5,9 +5,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,7 +56,7 @@ public class Sql {
         throw new RuntimeException("INSERT 실행 실패, 생성된 키 없음");
     }
 
-    public int update() {
+    private int executeUpdate() {
         String sql = queryBuilder.toString().trim();
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
@@ -77,20 +75,43 @@ public class Sql {
         }
     }
 
-    public int delete() {
-        String sql = queryBuilder.toString().trim();
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public int update() {
+        return executeUpdate();
+    }
 
-            for (int i = 0; i < parameters.size(); i++) {
-                pstmt.setObject(i + 1, parameters.get(i));
-            }
+    public int delete() {
+        return executeUpdate();
+    }
+
+    public List<Map<String, Object>> selectRows() {
+        String sql = queryBuilder.toString().trim();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
 
             if (devMode) {
                 logger.log(Level.INFO, "Executing SQL: " + pstmt);
             }
 
-            return pstmt.executeUpdate();
+            List<Map<String, Object>> rows = new ArrayList<>();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
 
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Object value = rs.getObject(i);
+
+                    if (value instanceof Timestamp) {
+                        value = ((Timestamp) value).toLocalDateTime();
+                    }
+
+                    row.put(columnName, value);
+                }
+                rows.add(row);
+            }
+
+            return rows;
         } catch (SQLException e) {
             throw new RuntimeException("SQL 실행 중 오류 발생", e);
         }
