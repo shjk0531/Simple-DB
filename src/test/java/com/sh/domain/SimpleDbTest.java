@@ -1,7 +1,7 @@
 package com.sh.domain;
 
-import com.sh.domain.simpleDb.db.entity.SimpleDb;
-import com.sh.domain.simpleDb.sql.entity.Sql;
+import com.sh.domain.simpleDb.SimpleDb;
+import com.sh.domain.simpleDb.Sql;
 import org.junit.jupiter.api.*;
 
 import java.util.stream.IntStream;
@@ -85,31 +85,31 @@ public class SimpleDbTest {
 
         assertThat(newId).isGreaterThan(0);
     }
-//
-//    @Test
-//    @DisplayName("update")
-//    public void t002() {
-//        Sql sql = simpleDb.genSql();
-//
-//        // id가 0, 1, 2, 3인 글 수정
-//        // id가 0인 글은 없으니, 실제로는 3개의 글이 삭제됨
-//
-//        /*
-//        == rawSql ==
-//        UPDATE article
-//        SET title = '제목 new'
-//        WHERE id IN ('0', '1', '2', '3')
-//        */
-//        sql.append("UPDATE article")
-//                .append("SET title = ?", "제목 new")
-//                .append("WHERE id IN (?, ?, ?, ?)", 0, 1, 2, 3);
-//
-//        // 수정된 row 개수
-//        int affectedRowsCount = sql.update();
-//
-//        assertThat(affectedRowsCount).isEqualTo(3);
-//    }
-//
+
+    @Test
+    @DisplayName("update")
+    public void t002() {
+        Sql sql = simpleDb.genSql();
+
+        // id가 0, 1, 2, 3인 글 수정
+        // id가 0인 글은 없으니, 실제로는 3개의 글이 삭제됨
+
+        /*
+        == rawSql ==
+        UPDATE article
+        SET title = '제목 new'
+        WHERE id IN ('0', '1', '2', '3')
+        */
+        sql.append("UPDATE article")
+                .append("SET title = ?", "제목 new")
+                .append("WHERE id IN (?, ?, ?, ?)", 0, 1, 2, 3);
+
+        // 수정된 row 개수
+        int affectedRowsCount = sql.update();
+
+        assertThat(affectedRowsCount).isEqualTo(3);
+    }
+
 //    @Test
 //    @DisplayName("delete")
 //    public void t003() {
