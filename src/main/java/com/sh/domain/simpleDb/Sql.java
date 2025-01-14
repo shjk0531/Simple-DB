@@ -76,4 +76,23 @@ public class Sql {
             throw new RuntimeException("SQL 실행 중 오류 발생", e);
         }
     }
+
+    public int delete() {
+        String sql = queryBuilder.toString().trim();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            for (int i = 0; i < parameters.size(); i++) {
+                pstmt.setObject(i + 1, parameters.get(i));
+            }
+
+            if (devMode) {
+                logger.log(Level.INFO, "Executing SQL: " + pstmt);
+            }
+
+            return pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("SQL 실행 중 오류 발생", e);
+        }
+    }
 }
