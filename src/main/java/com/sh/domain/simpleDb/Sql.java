@@ -116,4 +116,36 @@ public class Sql {
             throw new RuntimeException("SQL 실행 중 오류 발생", e);
         }
     }
+
+    public Map<String, Object> selectRow() {
+        String sql = queryBuilder.toString().trim();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (devMode) {
+                logger.log(Level.INFO, "Executing SQL: " + pstmt);
+            }
+
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            if (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Object value = rs.getObject(i);
+
+                    if (value instanceof Timestamp) {
+                        value = ((Timestamp) value).toLocalDateTime();
+                    }
+
+                    row.put(columnName, value);
+                }
+                return row;
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("SQL 실행 중 오류 발생", e);
+        }
+    }
 }
