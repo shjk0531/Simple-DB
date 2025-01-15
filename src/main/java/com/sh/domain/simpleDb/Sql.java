@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,6 +143,25 @@ public class Sql {
                     row.put(columnName, value);
                 }
                 return row;
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("SQL 실행 중 오류 발생", e);
+        }
+    }
+
+    public LocalDateTime selectDatetime() {
+        String sql = queryBuilder.toString().trim();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (devMode) {
+                logger.log(Level.INFO, "Executing SQL: " + pstmt);
+            }
+
+            if (rs.next()) {
+                Timestamp timestamp = rs.getTimestamp(1);
+                return timestamp.toLocalDateTime();
             }
             return null;
         } catch (SQLException e) {

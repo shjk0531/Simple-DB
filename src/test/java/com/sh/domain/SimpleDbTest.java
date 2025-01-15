@@ -5,6 +5,7 @@ import com.sh.domain.simpleDb.Sql;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -187,24 +188,24 @@ public class SimpleDbTest {
         assertThat(articleRow.get("modifiedDate")).isNotNull();
         assertThat(articleRow.get("isBlind")).isEqualTo(false);
     }
-//
-//    @Test
-//    @DisplayName("selectDatetime")
-//    public void t006() {
-//        Sql sql = simpleDb.genSql();
-//        /*
-//        == rawSql ==
-//        SELECT NOW()
-//        */
-//        sql.append("SELECT NOW()");
-//
-//        LocalDateTime datetime = sql.selectDatetime();
-//
-//        long diff = ChronoUnit.SECONDS.between(datetime, LocalDateTime.now());
-//
-//        assertThat(diff).isLessThanOrEqualTo(1L);
-//    }
-//
+
+    @Test
+    @DisplayName("selectDatetime")
+    public void t006() {
+        Sql sql = simpleDb.genSql();
+        /*
+        == rawSql ==
+        SELECT NOW()
+        */
+        sql.append("SELECT NOW()");
+
+        LocalDateTime datetime = sql.selectDatetime();
+
+        long diff = ChronoUnit.SECONDS.between(datetime, LocalDateTime.now());
+
+        assertThat(diff).isLessThanOrEqualTo(1L);
+    }
+
 //    @Test
 //    @DisplayName("selectLong")
 //    public void t007() {
